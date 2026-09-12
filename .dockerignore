@@ -1,0 +1,17 @@
+.env
+.cache
+log.txt
+.DS_Store
+Thumbs.db
+venv/
+.venv/
+env/
+cache/
+downloads/
+__pycache__/
+*.py[cod]
+OpenHeartsMusic/cookies/*.txt
+*.session
+*.session-journal
+*.session-shm
+*.session-wal
