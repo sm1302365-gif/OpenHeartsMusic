@@ -36,8 +36,8 @@ class Config:
         self.BOT_TOKEN: str = self._get_str(
             "BOT_TOKEN", "")
         # Group/channel ID or username for logs
-        self.LOG_CHANNEL: int | str = self._get_chat_id(
-            "LOGGER_ID", "",)
+        # Logging is optional; do not fall back to an unknown channel ID.
+        self.LOG_CHANNEL: int | str = self._get_chat_id("LOGGER_ID", "")
         self.LOGGER_ID: int | str = self.LOG_CHANNEL
         # Your user ID (get from @userinfobot)
         self.OWNER_ID: int = self._get_int("OWNER_ID", "")
@@ -70,7 +70,7 @@ class Config:
         # Primary assistant (optional; configure STRING_SESSION1 or STRING_SESSION1)
 
         self.SESSION1 = getenv("STRING_SESSION1", "")
-
+                               
         self.SESSION2 = getenv("STRING_SESSION2", "")
 
         self.SESSION3 = getenv("STRING_SESSION3", "")
@@ -85,13 +85,13 @@ class Config:
 
         self.SUPPORT_CHANNEL: str = getenv(
             "SUPPORT_CHANNEL", "https://t.me/ShreyanshMusicSupport")
-        self.SUPPORT_CHAT: str = getenv("SUPPORT_CHAT", "https://t.me/+jLpKEtUuhyNlODA1")
+        self.SUPPORT_CHAT: str = getenv("SUPPORT_CHAT", "https://t.me/ShreyanshMusicSupport")
 
         # ============ WELCOME CONFIGURATION ============
         # Welcome image URL for new group members
         self.WELCOME_IMG: str = self._get_str(
             "WELCOME_IMG",
-            getenv("START_IMG", "https://img.sanishtech.com/u/2bafc6750e1435110fe70e15cdd3b2de.jpg")
+            getenv("START_IMG", "https://img.sanishtech.com/u/76d9a10831d8195da5f7ebbf998aacc5.jpg")
         )
 
         # ============ EXCLUDED CHATS ============
@@ -127,6 +127,7 @@ class Config:
             "PING_IMG", "https://files.catbox.moe/djilyq.png")    # Ping command image
         self.START_IMG: str = getenv(
             "START_IMG", "https://img.sanishtech.com/u/d690a144239c86c30184a7c83587d8ca.jpg")  # Start command image
+
 
         # ============ MODERATION ============
         # List of usernames to exclude from admin mentions
@@ -220,7 +221,6 @@ class Config:
             "API_HASH": self.API_HASH,
             "BOT_TOKEN": self.BOT_TOKEN,
             "MONGO_URL": self.MONGO_URL,
-            "LOG_CHANNEL": self.LOG_CHANNEL,
             "OWNER_ID": self.OWNER_ID,
         }
 
