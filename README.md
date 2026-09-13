@@ -1,4 +1,14 @@
 # OpenHearts Music
+<br>
+
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](LICENSE)
+[![Telegram Channel](https://t.me/ShreyanshMusicSupport)](https://t.me/Shreyansh_Raghuvanshi)
+[![Telegram Support](https://t.me/+jLpKEtUuhyNlODA1)
+
+<img src="![](https://img.sanishtech.com/u/d690a144239c86c30184a7c83587d8ca.jpg)"
+alt="OpenHearts Music" width="720" height="auto"/>
+
 
 A modern Telegram music bot for streaming audio in group voice chats. This project uses Python, Hydrogram, PyTgCalls, yt-dlp, FFmpeg, and MongoDB to provide a polished music playback experience inside Telegram groups and channels.
 
@@ -83,151 +93,223 @@ OpenHeartsMusic main/
 
 ## Requirements
 
-Before running the bot, make sure you have:
+Before deploying **OpenHearts Music**, ensure your system has:
 
 - Python 3.10 or newer
-- FFmpeg and ffprobe installed and available on PATH
-- A MongoDB database connection
-- Telegram API credentials from my.telegram.org
-- A bot token from BotFather
-- A Hydrogram session string for the assistant account
+- FFmpeg and ffprobe available on PATH
+- A MongoDB Atlas or self-hosted database
+- Telegram API credentials from [my.telegram.org](https://my.telegram.org)
+- A bot token from [@BotFather](https://t.me/BotFather)
+- At least one Hydrogram assistant session string
 - Git
-- Optional: Docker for containerized deployment
+- Optional: Docker and Docker Compose
 
-## Installation
+---
 
-### 1. Clone the repository
+# 🚀 Quick Start
+
+Clone the repository and enter its directory.
 
 ```bash
 git clone <your-repository-url>
 cd "OpenHeartsMusic main"
 ```
 
-### 2. Create a virtual environment
+Create a virtual environment and install dependencies.
 
 ```bash
 python -m venv venv
-```
-
-On Windows:
-
-```powershell
-venv\Scripts\activate
-```
-
-On Linux or macOS:
-
-```bash
 source venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+On Windows PowerShell, activate the environment with:
 
-Copy the sample file and fill in your values:
+```powershell
+venv\Scripts\Activate.ps1
+```
+
+Create your environment configuration.
 
 ```bash
-copy sample.env .env
+cp sample.env .env
 ```
 
-Then edit the .env file with your actual Telegram API credentials, bot token, database URL, owner ID, and assistant session.
-
-Example values:
-
-```env
-API_ID=12345678
-API_HASH=your_api_hash
-BOT_TOKEN=your_bot_token
-MONGO_DB_URI=mongodb+//user:password@cluster.mongodb.net/
-OWNER_ID=123456789
-LOG_CHANNEL=123456789
-LOGGER_ID=123456789
-STRING_SESSION=your_hydrogram_session
-COOKIE_URL=
-```
-
-See sample.env for all optional feature flags such as autoplay, welcome messages, custom thumbnails, and video playback toggles.
-
-## Running the Bot
-
-### Local run
+On Windows PowerShell, use `Copy-Item sample.env .env` instead. Fill in the required values, then start the bot:
 
 ```bash
 python -m OpenHeartsMusic
 ```
 
-Or use the included start script:
+You can also use the included start script:
 
 ```bash
 bash start
 ```
 
-### Docker run
+---
+
+# ⚙️ Environment Variables
+
+Create a `.env` file in the project root and configure the required values.
+
+```env
+# Telegram API
+API_ID=
+API_HASH=
+BOT_TOKEN=
+
+# MongoDB and logging
+MONGO_DB_URI=
+LOGGER_ID=
+OWNER_ID=
+
+# Assistant accounts
+STRING_SESSION1=
+STRING_SESSION2=
+STRING_SESSION3=
+
+# Optional features
+AUTO_PLAY=False
+WELCOME_ENABLED=True
+AUTO_END=False
+AUTO_LEAVE=False
+THUMB_GEN=True
+VIDEO_PLAY=True
+QUEUE_LIMIT=30
+PLAYLIST_LIMIT=20
+COOKIE_URL=
+```
+
+| Variable | Description |
+|----------|-------------|
+| `API_ID` | Telegram API ID from my.telegram.org |
+| `API_HASH` | Telegram API hash |
+| `BOT_TOKEN` | Token received from @BotFather |
+| `MONGO_DB_URI` | MongoDB connection URI |
+| `LOGGER_ID` | Group or channel ID used for bot logs |
+| `OWNER_ID` | Telegram user ID of the bot owner |
+| `STRING_SESSION1` | Primary Hydrogram assistant session |
+| `STRING_SESSION2` | Optional second assistant session |
+| `STRING_SESSION3` | Optional third assistant session |
+| `COOKIE_URL` | Optional space-separated YouTube cookie URLs |
+
+See [sample.env](sample.env) for all supported options, including Spotify metadata, images, welcome messages, video limits, and moderation exclusions.
+
+---
+
+# 🛠 Installation Options
+
+## Docker
+
+Build and run the image:
 
 ```bash
 docker build -t openheartsmusic:latest .
-docker run -d --restart unless-stopped --env-file .env -v ./OpenHeartsMusic/cookies:/app/OpenHeartsMusic/cookies -v ./downloads:/app/downloads --name openheartsmusic openheartsmusic:latest
+docker run -d \
+	--restart unless-stopped \
+	--env-file .env \
+	-v ./OpenHeartsMusic/cookies:/app/OpenHeartsMusic/cookies \
+	-v ./downloads:/app/downloads \
+	--name openheartsmusic \
+	openheartsmusic:latest
 ```
 
-### Docker Compose
+## Docker Compose
 
 ```bash
 docker compose up -d --build
-```
-
-To follow logs:
-
-```bash
 docker compose logs -f
 ```
 
-## Important Notes
+Stop or restart the service with:
 
-- Keep your .env file private. Do not commit it to version control.
-- FFmpeg and ffprobe must be installed and available on PATH.
-- The assistant session is required so the bot can join Telegram voice chats and stream audio.
-- The project uses MongoDB for bot state and configuration.
-- Some features such as age-restricted media access may depend on valid YouTube cookie URLs.
+```bash
+docker compose down
+docker compose restart
+```
 
-## Typical Bot Commands
+---
 
-This bot includes a plugin-based command system. Common commands may include:
+# 📖 Commands
 
-- /play
-- /pause
-- /resume
-- /skip
-- /stop
-- /queue
-- /seek
-- /vplay
-- /help
-- /ping
+## 👤 User Commands
 
-The exact command list can vary by deployment and plugin configuration.
+| Command | Description |
+|---------|-------------|
+| `/play <song/url>` | Play a song from a YouTube URL or search query |
+| `/vplay <song/url>` | Play supported video media when enabled |
+| `/queue` | Display the current music queue |
+| `/ping` | Check bot latency and status |
+| `/help` | Show the help menu |
 
-## Development Notes
+## 🛡 Playback and Admin Commands
 
-- Main entry point: OpenHeartsMusic/__main__.py
-- Bot configuration: config.py
-- Runtime setup: OpenHeartsMusic/core/
-- Helper functions and playback logic: OpenHeartsMusic/helpers/
-- Telegram behavior and command modules: OpenHeartsMusic/plugins/
-- Tests: tests/
+| Command | Description |
+|---------|-------------|
+| `/pause` | Pause current playback |
+| `/resume` | Resume playback |
+| `/skip` | Skip the current track |
+| `/stop` | Stop playback |
+| `/seek <time>` | Seek to a specific timestamp |
+| `/end` | End the current voice chat session |
 
-## License
+The exact command availability can vary with deployment settings and enabled plugins.
 
-This project is licensed under the GNU General Public License v3.0. See the LICENSE file in this repository for full license details.
+---
 
-## Support
+# 📂 Project Structure
 
-For issues, questions, or feature requests, use the repository issue tracker and the project support channels defined in the bot configuration.
+```text
+OpenHeartsMusic main/
+├── OpenHeartsMusic/
+│   ├── core/          # Bot, calls, database, sessions, and YouTube logic
+│   ├── helpers/       # Playback, queues, thumbnails, effects, and utilities
+│   ├── locales/       # Translation files
+│   └── plugins/       # Admin, playback, settings, events, and utilities
+├── config.py          # Environment-based configuration
+├── sample.env         # Configuration template
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+├── start
+├── tests/
+├── downloads/
+├── MASTER_DOCUMENTATION.md
+└── LICENSE
+```
 
-## Disclaimer
+---
 
-This software is intended for lawful, personal, and community use. Please comply with Telegram, YouTube, and other platform terms when using streaming and media features.
+# 🤝 Contributing
+
+Contributions are welcome. Bug fixes, documentation improvements, performance work, feature suggestions, and tests are all appreciated. Please open an issue or pull request with enough detail to reproduce and review the change.
+
+---
+
+# 📞 Support
+
+| Platform | Link |
+|----------|------|
+| 📢 Telegram Channel | [Shreyansh Music Support](https://t.me/ShreyanshMusicSupport) |
+| 💬 Telegram Support | [OpenHearts Support Chat](https://t.me/+jLpKEtUuhyNlODA1) |
+
+For bugs, include the relevant logs, configuration flags, and reproduction steps. Never share your `.env` file or session strings.
+
+---
+
+# 📄 License
+
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**. See [LICENSE](LICENSE) for the complete license text.
+
+<div align="center">
+
+## ⭐ Support the Project
+
+If OpenHearts Music is useful to you, consider starring the repository and sharing it with your community.
+
+<br>
+
+**Made with ❤️ by the OpenHearts Music contributors**
+
+</div>
