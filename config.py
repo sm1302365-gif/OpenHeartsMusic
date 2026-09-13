@@ -233,7 +233,7 @@ class Config:
             # Allow startup to continue with bundled defaults if the user has not
             # provided real credentials yet. Real bot functionality will still fail
             # later until the values are replaced with valid ones.
-            if "BOT_TOKEN" in missing and self.BOT_TOKEN == "8892862833:AAHu9sK-a_qN1dT9W0arclELHBqP8Hombg8":
+            if "BOT_TOKEN" in missing and self.BOT_TOKEN == "":
                 return
             raise SystemExit(
                 f"❌ Missing required environment variables: {', '.join(missing)}\n"
