@@ -95,6 +95,20 @@ def test_play_log_uses_named_template_fields():
     assert "My Group" in sent_text
 
 
+def test_play_log_ignores_missing_logger():
+    msg = SimpleNamespace(
+        chat=SimpleNamespace(id=123, title="My Group"),
+        from_user=SimpleNamespace(id=456, mention="@alice"),
+        link="https://example.com/test",
+        lang={},
+    )
+
+    with patch.object(app, "logger", ""), patch.object(app, "send_message", new=AsyncMock()) as mock_send:
+        asyncio.run(Utilities().play_log(msg, "Example Song", "03:15"))
+
+    mock_send.assert_not_awaited()
+
+
 def test_welcome_caption_includes_member_identity():
     member = SimpleNamespace(
         id=123456,
