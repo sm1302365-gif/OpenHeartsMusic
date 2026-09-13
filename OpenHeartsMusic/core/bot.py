@@ -39,7 +39,7 @@ class Bot(hydrogram.Client):
         )
 
         self.owner: int = int(config.OWNER_ID)
-        self.logger: int = config.LOGGER_ID
+        self.logger: int | str = config.LOGGER_ID
         self.bl_users: hydrogram.filters.Filter = hydrogram.filters.user()
         self.sudoers: set[int] = {self.owner}  # Store sudo user IDs
         self.sudo_filter: hydrogram.filters.Filter = hydrogram.filters.user()
@@ -81,20 +81,23 @@ class Bot(hydrogram.Client):
 
         # Verify logger group access without blocking startup.
         try:
-            # Avoid resolving phone numbers (bots cannot use contacts.ResolvePhone).
-            if isinstance(self.logger, str) and re.fullmatch(r"\+?\d+", self.logger):
-                logger.warning(
-                    f"LOGGER_ID appears to be a phone number ({self.logger}); bots cannot message phone numbers. Skipping logger notifications."
-                )
+            if not self.logger:
+                logger.info("LOGGER_ID is not configured; logger notifications are disabled.")
             else:
-                await self.send_message(self.logger, "🤖 ʙᴏᴛ ꜱᴛᴀʀᴛᴇᴅ")
-            member = await self.get_chat_member(self.logger, self.id)
-            if member.status != hydrogram.enums.ChatMemberStatus.ADMINISTRATOR:
-                logger.warning(
-                    f"Logger group {self.logger} is reachable but the bot is not an admin there."
-                )
-            else:
-                logger.info(f"Logger group {self.logger} is available.")
+                # Avoid resolving phone numbers (bots cannot use contacts.ResolvePhone).
+                if isinstance(self.logger, str) and re.fullmatch(r"\+?\d+", self.logger):
+                    logger.warning(
+                        f"LOGGER_ID appears to be a phone number ({self.logger}); bots cannot message phone numbers. Skipping logger notifications."
+                    )
+                else:
+                    await self.send_message(self.logger, "🤖 ʙᴏᴛ ꜱᴛᴀʀᴛᴇᴅ")
+                member = await self.get_chat_member(self.logger, self.id)
+                if member.status != hydrogram.enums.ChatMemberStatus.ADMINISTRATOR:
+                    logger.warning(
+                        f"Logger group {self.logger} is reachable but the bot is not an admin there."
+                    )
+                else:
+                    logger.info(f"Logger group {self.logger} is available.")
         except Exception as ex:
             logger.warning(
                 f"Logger group {self.logger} is unavailable or invalid: {ex}. "
