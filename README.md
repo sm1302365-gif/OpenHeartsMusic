@@ -6,7 +6,7 @@
 [![Telegram Channel](https://t.me/ShreyanshMusicSupport)](https://t.me/Shreyansh_Raghuvanshi)
 [![Telegram Support](https://t.me/+jLpKEtUuhyNlODA1)
 
-<img src="![](https://img.sanishtech.com/u/d690a144239c86c30184a7c83587d8ca.jpg)"
+<img src="(https://img.sanishtech.com/u/d690a144239c86c30184a7c83587d8ca.jpg)"
 alt="OpenHearts Music" width="720" height="auto"/>
 
 
