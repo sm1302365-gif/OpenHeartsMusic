@@ -3,7 +3,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](LICENSE)
-[![Telegram Channel](https://t.me/ShreyanshMusicSupport)[!](https://t.me/Shreyansh_Raghuvanshi)
+[![Telegram Channel](https://t.me/ShreyanshMusicSupport)(https://t.me/Shreyansh_Raghuvanshi)
 [![Telegram Support](https://t.me/+jLpKEtUuhyNlODA1)
 
 <img width="640" height="640" alt="Image" src="https://github.com/user-attachments/assets/a29b1c0b-3198-4da1-8448-39c21dda3d40"/>
