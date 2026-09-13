@@ -6,8 +6,7 @@
 [![Telegram Channel](https://t.me/ShreyanshMusicSupport)](https://t.me/Shreyansh_Raghuvanshi)
 [![Telegram Support](https://t.me/+jLpKEtUuhyNlODA1)
 
-<img src="(https://github.com/user-attachments/assets/e8d1a5eb-f612-4e79-9c3c-deb34a5ea8d2)"
-alt="OpenHearts Music" width="720" height="auto"/>
+<img width="640" height="640" alt="Image" src="https://github.com/user-attachments/assets/a29b1c0b-3198-4da1-8448-39c21dda3d40"/>
 
 
 A modern Telegram music bot for streaming audio in group voice chats. This project uses Python, Hydrogram, PyTgCalls, yt-dlp, FFmpeg, and MongoDB to provide a polished music playback experience inside Telegram groups and channels.
