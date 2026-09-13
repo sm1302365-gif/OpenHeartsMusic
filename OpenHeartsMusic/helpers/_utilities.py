@@ -73,7 +73,8 @@ class Utilities:
         title: str,
         duration: str,
     ) -> None:
-        if m.chat.id == app.logger:
+        logger_id = app.logger
+        if not logger_id or m.chat.id == logger_id:
             return
 
         template = m.lang.get("play_log") if hasattr(m, "lang") and isinstance(m.lang, dict) else None
@@ -115,7 +116,11 @@ class Utilities:
                 title,
                 duration,
             )
-        await app.send_message(chat_id=app.logger, text=_text)
+        try:
+            await app.send_message(chat_id=logger_id, text=_text)
+        except Exception:
+            # Logger misconfiguration must never interrupt playback.
+            return
 
     async def send_log(self, m: types.Message) -> None:
         # Avoid attempting to resolve phone-number-like logger IDs (causes contacts.ResolvePhone errors)
