@@ -11,10 +11,14 @@
 # ==============================================================================
 
 
+import os
+import sys
+
 import hydrogram
 from typing import Optional
 
 from OpenHeartsMusic import ROOT, config, logger
+from OpenHeartsMusic.compat import recover_hydrogram_session
 import re
 
 
@@ -65,6 +69,33 @@ class Bot(hydrogram.Client):
         try:
             await super().start()
         except Exception as exc:
+            if self._is_revoked_session_error(exc):
+                # Telegram invalidates the local authorization when all sessions
+                # are terminated. Close the failed client before replacing its
+                # SQLite session so Windows does not keep the file locked.
+                try:
+                    await super().stop()
+                except Exception:
+                    pass
+
+                if recover_hydrogram_session(SESSION_DIR):
+                    logger.warning(
+                        "Telegram revoked the main bot session; removed the stale "
+                        "Hydrogram session and restarting for fresh authorization."
+                    )
+                    if os.environ.get("OPENHEARTS_SESSION_RECOVERY_ATTEMPT") != "1":
+                        os.environ["OPENHEARTS_SESSION_RECOVERY_ATTEMPT"] = "1"
+                        os.execv(sys.executable, [sys.executable, "-m", "OpenHeartsMusic"])
+                    raise RuntimeError(
+                        "Telegram rejected the refreshed bot session. Verify BOT_TOKEN "
+                        "and restart the bot."
+                    ) from exc
+                else:
+                    raise RuntimeError(
+                        "Telegram revoked the bot session, but no local session file "
+                        "could be recovered. Verify BOT_TOKEN and restart the bot."
+                    ) from exc
+
             message = str(exc).lower()
             if "database is locked" in message or "database is busy" in message:
                 raise RuntimeError(
@@ -105,6 +136,14 @@ class Bot(hydrogram.Client):
             )
 
         logger.info(f"🤖 Bot started successfully as @{self.username}")
+
+    @staticmethod
+    def _is_revoked_session_error(exc: BaseException) -> bool:
+        return (
+            exc.__class__.__name__ == "SessionRevoked"
+            or "session_revoked" in str(exc).lower()
+            or "[401 session_revoked]" in str(exc).lower()
+        )
 
     async def exit(self) -> None:
 
