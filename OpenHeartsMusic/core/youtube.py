@@ -279,6 +279,10 @@ class YouTube:
         return _best_file([path for path in candidates if not os.path.isdir(path)])
 
     def get_cookies(self):
+        configured_cookie = getattr(config, "COOKIE_FILE", None)
+        if configured_cookie and Path(configured_cookie).is_file():
+            return configured_cookie
+
         if ROOT_COOKIE_FILE.is_file():
             return str(ROOT_COOKIE_FILE)
 
