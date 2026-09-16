@@ -178,6 +178,7 @@ VIDEO_PLAY=True
 QUEUE_LIMIT=30
 PLAYLIST_LIMIT=20
 COOKIE_URL=
+COOKIE_FILE=OpenHeartsMusic/cookies/www.youtube.com_cookies.txt
 ```
 
 | Variable | Description |
