@@ -8,6 +8,7 @@
 from os import getenv
 from typing import List
 from dotenv import load_dotenv
+COOKIES_PATH = "cookies/cookies.txt"
 
 # Load environment variables from .env file (create one from sample.env)
 load_dotenv()
