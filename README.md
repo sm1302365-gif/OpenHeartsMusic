@@ -110,9 +110,9 @@ Before deploying **OpenHearts Music**, ensure your system has:
 Clone the repository and enter its directory.
 
 ```bash
-git clone <your-repository-url>
-cd "OpenHeartsMusic main"
+git clone https://github.com/sm1302365-gif/OpenHeartsMusic.git
 ```
+cd "OpenHeartsMusic main"
 
 Create a virtual environment and install dependencies.
 
