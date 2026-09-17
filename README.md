@@ -112,9 +112,11 @@ Clone the repository and enter its directory.
 ```bash
 git clone https://github.com/sm1302365-gif/OpenHeartsMusic.git
 ```
-```
+
+```bash
 cd "OpenHeartsMusic main"
----
+```
+
 Create a virtual environment and install dependencies.
 
 ```bash
