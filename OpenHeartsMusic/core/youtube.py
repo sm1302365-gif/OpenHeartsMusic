@@ -37,7 +37,6 @@ YTDLP_COMMON_OPTIONS = {
     "js_runtimes": {"deno": {}, "node": {}},
     "geo_bypass": True,
     "nocheckcertificate": True,
-    "proxy": config.PROXY_URL,
     "http_headers": {
         "User-Agent": BROWSER_USER_AGENT,
     },
