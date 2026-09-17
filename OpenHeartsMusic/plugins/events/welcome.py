@@ -110,7 +110,11 @@ def _load_base_image(base_image_source=None) -> Image.Image:
     if base_image_source:
         try:
             if isinstance(base_image_source, str) and base_image_source.startswith(("http://", "https://")):
-                response = requests.get(base_image_source, timeout=15)
+                response = requests.get(
+                    base_image_source,
+                    timeout=15,
+                    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"},
+                )
                 response.raise_for_status()
                 return Image.open(BytesIO(response.content)).convert("RGBA")
 
@@ -146,7 +150,11 @@ def generate_welcome_image(
     if profile_pic_source:
         try:
             if isinstance(profile_pic_source, str) and profile_pic_source.startswith("http"):
-                response = requests.get(profile_pic_source, timeout=15)
+                response = requests.get(
+                    profile_pic_source,
+                    timeout=15,
+                    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"},
+                )
                 response.raise_for_status()
                 profile_img = Image.open(BytesIO(response.content)).convert("RGBA")
             else:
@@ -243,11 +251,10 @@ async def welcome_new_member(client, message):
                 photo=welcome_image,
                 caption=caption,
                 reply_markup=markup,
-                quote=False,
             )
         except Exception as error:
             logger.debug(f"Welcome card failed for {user_id}: {error}")
             try:
-                await message.reply_text(f"Welcome {_member_name(member)}!", quote=False)
+                await message.reply_text(f"Welcome {_member_name(member)}!")
             except Exception:
                 pass
