@@ -401,9 +401,7 @@ class Thumbnail:
 
         for attempt in range(max_retries):
             try:
-                async with aiohttp.ClientSession(
-                    connector=connector, timeout=timeout, trust_env=True
-                ) as session:
+                async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
                     async with session.get(
                         url,
                         headers={
