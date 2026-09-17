@@ -279,17 +279,23 @@ class YouTube:
         return _best_file([path for path in candidates if not os.path.isdir(path)])
 
     def get_cookies(self):
-        configured_cookie = getattr(config, "COOKIE_FILE", None)
-        if configured_cookie and Path(configured_cookie).is_file():
-            return configured_cookie
+        def usable(path: str | Path) -> bool:
+            try:
+                return Path(path).is_file() and Path(path).stat().st_size > 32
+            except OSError:
+                return False
 
-        if ROOT_COOKIE_FILE.is_file():
+        configured_cookie = getattr(config, "COOKIE_FILE", None)
+        if configured_cookie and usable(configured_cookie):
+            return str(Path(configured_cookie).resolve())
+
+        if usable(ROOT_COOKIE_FILE):
             return str(ROOT_COOKIE_FILE)
 
         if not self.checked:
             if COOKIES_DIR.exists():
                 for file in os.listdir(COOKIES_DIR):
-                    if file.endswith(".txt"):
+                    if file.endswith(".txt") and usable(COOKIES_DIR / file):
                         self.cookies.append(file)
             self.checked = True
         if not self.cookies:
@@ -916,22 +922,38 @@ class YouTube:
                         except Exception:
                             pass
 
-            # Start download thread
-            return await asyncio.to_thread(_download, ydl_opts_cookie)
+            # A stale or VPS-specific cookie can make YouTube reject an otherwise
+            # valid request. Retry once without it before reporting a failure.
+            result = await asyncio.to_thread(_download, ydl_opts_cookie)
+            if result or not self.get_cookies():
+                return result
+
+            logger.warning(
+                "YouTube rejected the configured cookie; retrying without cookies for %s",
+                video_id,
+            )
+            return await asyncio.to_thread(_download, ydl_opts)
 
     async def stream_url(self, video_id: str) -> Optional[str]:
         """Resolve a short-lived direct audio URL without downloading the track."""
         url = self._watch_url(video_id)
-        ydl_opts = {
-            **YTDLP_COMMON_OPTIONS,
-            "quiet": True,
-            "no_warnings": True,
-            "noplaylist": True,
-            "format": "bestaudio/best",
-            **self._cookie_options(),
-        }
+        cookie_options = self._cookie_options()
+        attempts = [cookie_options]
+        if cookie_options:
+            attempts.append({})
 
-        def _extract_stream_url():
+        def _extract_stream_url(options):
+            ydl_opts = {
+                **YTDLP_COMMON_OPTIONS,
+                "quiet": True,
+                "no_warnings": True,
+                "noplaylist": True,
+                "format": "bestaudio/best",
+                "retries": 2,
+                "fragment_retries": 2,
+                "extractor_retries": 2,
+                **options,
+            }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
                 if not info:
@@ -944,8 +966,20 @@ class YouTube:
                         return fmt["url"]
                 return None
 
-        try:
-            return await asyncio.to_thread(_extract_stream_url)
-        except Exception as error:
-            logger.warning(f"Direct stream URL resolution failed for {video_id}: {error}")
-            return None
+        last_error = None
+        for options in attempts:
+            try:
+                stream_url = await asyncio.to_thread(_extract_stream_url, options)
+                if stream_url:
+                    return stream_url
+            except Exception as error:
+                last_error = error
+                logger.warning(
+                    "Direct stream URL attempt failed for %s: %s", video_id, error
+                )
+
+        if last_error:
+            logger.warning(
+                "Direct stream URL resolution failed for %s: %s", video_id, last_error
+            )
+        return None
