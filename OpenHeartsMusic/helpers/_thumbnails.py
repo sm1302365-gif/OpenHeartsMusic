@@ -401,10 +401,15 @@ class Thumbnail:
 
         for attempt in range(max_retries):
             try:
-                async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+                async with aiohttp.ClientSession(
+                    connector=connector, timeout=timeout, trust_env=True
+                ) as session:
                     async with session.get(
                         url,
-                        headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'image/*'},
+                        headers={
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0',
+                            'Accept': 'image/*',
+                        },
                         ssl=False, allow_redirects=True,
                     ) as resp:
                         resp.raise_for_status()
