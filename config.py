@@ -5,7 +5,7 @@
 # Don't commit your .env file!
 # ==============================================================================
 
-from os import getenv
+from os import environ, getenv
 from pathlib import Path
 from typing import List
 from dotenv import load_dotenv
@@ -14,9 +14,18 @@ COOKIES_PATH = "cookies/cookies.txt"
 # Load environment variables from .env file (create one from sample.env)
 load_dotenv()
 
+DEFAULT_PROXY_URL = "http://45.132.252.25 49156"
+
 
 class Config:
     def __init__(self):
+
+    # Use the configured proxy for all HTTP-compatible application traffic.
+    self.PROXY_URL: str = self._get_str("PROXY_URL", DEFAULT_PROXY_URL)
+    self.PROXY: dict[str, str | int] = self._proxy_config(self.PROXY_URL)
+    environ.setdefault("HTTP_PROXY", self.PROXY_URL)
+    environ.setdefault("HTTPS_PROXY", self.PROXY_URL)
+    environ.setdefault("ALL_PROXY", self.PROXY_URL)
 
         # ============ TELEGRAM API CREDENTIALS ============
         # Get these from https://my.telegram.org
@@ -72,7 +81,7 @@ class Config:
         # Primary assistant (optional; configure STRING_SESSION1 or STRING_SESSION1)
 
         self.SESSION1 = getenv("STRING_SESSION1", "")
-                               
+
         self.SESSION2 = getenv("STRING_SESSION2", "")
 
         self.SESSION3 = getenv("STRING_SESSION3", "")
@@ -87,13 +96,13 @@ class Config:
 
         self.SUPPORT_CHANNEL: str = getenv(
             "SUPPORT_CHANNEL", "https://t.me/ShreyanshMusicSupport")
-        self.SUPPORT_CHAT: str = getenv("SUPPORT_CHAT", "https://t.me/ShreyanshMusicSupport")
+        self.SUPPORT_CHAT: str = getenv("SUPPORT_CHAT", "https://t.me/+jLpKEtUuhyNlODA1")
 
         # ============ WELCOME CONFIGURATION ============
         # Welcome image URL for new group members
         self.WELCOME_IMG: str = self._get_str(
             "WELCOME_IMG",
-            getenv("START_IMG", "https://img.sanishtech.com/u/76d9a10831d8195da5f7ebbf998aacc5.jpg")
+            ""
         )
 
         # ============ EXCLUDED CHATS ============
@@ -116,6 +125,8 @@ class Config:
         self.VIDEO_MAX_HEIGHT: int = self._parse_video_height()
 
         # ============ YOUTUBE COOKIES ============
+        # Optional local Netscape-format cookie file for yt-dlp.
+        self.COOKIE_FILE: str | None = self._get_cookie_file()
         # Parse space-separated cookie URLs for age-restricted content
         self.COOKIES_URL: List[str] = self._parse_cookies()
 
@@ -127,7 +138,7 @@ class Config:
         )
         self.PING_IMG: str = getenv(
             "PING_IMG", "https://files.catbox.moe/djilyq.png")    # Ping command image
-        self.START_IMG: str = getenv(
+        self.START_IMG: str = self._get_str(
             "START_IMG", "https://img.sanishtech.com/u/d690a144239c86c30184a7c83587d8ca.jpg")  # Start command image
 
 
@@ -160,6 +171,23 @@ class Config:
         if value is None or value == "":
             return default
         return value
+
+    def _proxy_config(self, proxy_url: str) -> dict[str, str | int]:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(proxy_url)
+        if parsed.scheme not in {"http", "https", "socks5", "socks5h"} or not parsed.hostname or not parsed.port:
+            raise ValueError("PROXY_URL must include a supported scheme, hostname, and port")
+        proxy = {
+            "scheme": parsed.scheme,
+            "hostname": parsed.hostname,
+            "port": parsed.port,
+        }
+        if parsed.username:
+            proxy["username"] = parsed.username
+        if parsed.password:
+            proxy["password"] = parsed.password
+        return proxy
 
     def _get_button_bg_color(self) -> str | None:
         value = getenv("BUTTON_BG_COLOR", "green")
@@ -210,6 +238,16 @@ class Config:
             for url in cookie_str.split()
             if url.strip() and any(source in url for source in valid_sources)
         ]
+
+    def _get_cookie_file(self) -> str | None:
+        cookie_file = getenv("COOKIE_FILE", "").strip()
+        if not cookie_file:
+            return None
+
+        path = Path(cookie_file).expanduser()
+        if not path.is_absolute():
+            path = Path(__file__).resolve().parent / path
+        return str(path.resolve()) if path.is_file() else None
 
     @staticmethod
     def _str_to_bool(value: str | None) -> bool:
