@@ -114,6 +114,11 @@ class YouTube:
         lowered = url.lower()
         return "open.spotify.com/" in lowered or "music.apple.com/" in lowered
 
+    @staticmethod
+    def _is_reload_error(error: Exception) -> bool:
+        message = str(error).lower()
+        return "page needs to be reloaded" in message
+
     def _get_spotify(self):
         if self._spotify is None:
             client_id = getattr(config, "SPOTIFY_CLIENT_ID", "")
@@ -409,18 +414,39 @@ class YouTube:
 
         try:
             if self.valid(query):
-                def _extract():
+                cookie_options = self._cookie_options()
+                attempts = [cookie_options]
+                if cookie_options:
+                    attempts.append({})
+
+                def _extract(options):
                     ydl_opts = {
                         **YTDLP_COMMON_OPTIONS,
                         "quiet": True,
                         "noplaylist": True,
                         "extract_flat": "in_playlist",
-                        **self._cookie_options(),
+                        **options,
                     }
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         return ydl.extract_info(query, download=False)
 
-                data = await asyncio.to_thread(_extract)
+                data = None
+                for attempt_number, options in enumerate(attempts, start=1):
+                    try:
+                        data = await asyncio.to_thread(_extract, options)
+                        break
+                    except Exception as error:
+                        if (
+                            attempt_number == 1
+                            and len(attempts) > 1
+                            and self._is_reload_error(error)
+                        ):
+                            logger.warning(
+                                "YouTube rejected the configured cookie; retrying URL search without cookies for %s",
+                                query,
+                            )
+                            continue
+                        raise
                 if not data:
                     return None
 
@@ -431,7 +457,6 @@ class YouTube:
                     duration_sec = 0
                 else:
                     duration = utils.format_duration(int(duration_sec)) if duration_sec else "0:00"
-
                 track = Track(
                     id=data.get("id"),
                     channel_name=data.get("uploader") or data.get("channel", ""),
