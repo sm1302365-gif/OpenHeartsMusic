@@ -154,6 +154,77 @@ class AutoplayTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(attempts), 2)
         self.assertNotIn("cookiefile", attempts[1])
 
+    async def test_search_retries_without_stale_cookie_after_reload_error(self):
+        attempts = []
+
+        class FakeYDL:
+            def __init__(self, options):
+                attempts.append(options)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def extract_info(self, url, download=False):
+                if len(attempts) == 1:
+                    raise RuntimeError("The page needs to be reloaded")
+                return {
+                    "id": "songid12345",
+                    "title": "Recovered Song",
+                    "duration": 120,
+                    "uploader": "Artist",
+                    "webpage_url": url,
+                }
+
+        with patch("OpenHeartsMusic.core.youtube.yt_dlp.YoutubeDL", FakeYDL), patch(
+            "OpenHeartsMusic.core.youtube.YouTube._cookie_options", return_value={"cookiefile": "stale.txt"}
+        ), patch(
+            "asyncio.to_thread", side_effect=lambda func, *args, **kwargs: func(*args)
+        ):
+            track = await YouTube().search("https://youtu.be/songid12345", 1)
+
+        self.assertIsNotNone(track)
+        self.assertEqual(len(attempts), 2)
+        self.assertNotIn("cookiefile", attempts[1])
+
+        async def test_url_search_retries_after_youtube_reload_error(self):
+            attempts = []
+
+            class FakeYDL:
+                def __init__(self, options):
+                    attempts.append(options)
+
+                def __enter__(self):
+                    return self
+
+                def __exit__(self, exc_type, exc, tb):
+                    return False
+
+                def extract_info(self, url, download=False):
+                    if len(attempts) == 1:
+                        raise RuntimeError("The page needs to be reloaded")
+                    return {
+                        "id": "song-id",
+                        "title": "Recovered Song",
+                        "duration": 180,
+                        "uploader": "Artist",
+                        "webpage_url": url,
+                    }
+
+            with patch("OpenHeartsMusic.core.youtube.yt_dlp.YoutubeDL", FakeYDL), patch(
+                "OpenHeartsMusic.core.youtube.YouTube._cookie_options", return_value={"cookiefile": "stale.txt"}
+            ), patch(
+                "asyncio.to_thread", side_effect=lambda func, *args, **kwargs: func(*args)
+            ):
+                track = await YouTube().search("https://youtu.be/song-id", 1)
+
+            self.assertIsNotNone(track)
+            self.assertEqual(track.id, "song-id")
+            self.assertEqual(len(attempts), 2)
+            self.assertNotIn("cookiefile", attempts[1])
+
     async def test_related_autoplay_skips_current_track(self):
         class FakeYDL:
             def __init__(self, *args, **kwargs):
