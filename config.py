@@ -5,7 +5,7 @@
 # Don't commit your .env file!
 # ==============================================================================
 
-from os import environ, getenv
+from os import getenv
 from pathlib import Path
 from typing import List
 from dotenv import load_dotenv
@@ -14,19 +14,8 @@ COOKIES_PATH = "cookies/cookies.txt"
 # Load environment variables from .env file (create one from sample.env)
 load_dotenv()
 
-DEFAULT_PROXY_URL = "http://45.132.252.25 49156"
-
-
 class Config:
     def __init__(self):
-
-    # Use the configured proxy for all HTTP-compatible application traffic.
-    self.PROXY_URL: str = self._get_str("PROXY_URL", DEFAULT_PROXY_URL)
-    self.PROXY: dict[str, str | int] = self._proxy_config(self.PROXY_URL)
-    environ.setdefault("HTTP_PROXY", self.PROXY_URL)
-    environ.setdefault("HTTPS_PROXY", self.PROXY_URL)
-    environ.setdefault("ALL_PROXY", self.PROXY_URL)
-
         # ============ TELEGRAM API CREDENTIALS ============
         # Get these from https://my.telegram.org
         # Telegram API ID (numeric)
@@ -171,23 +160,6 @@ class Config:
         if value is None or value == "":
             return default
         return value
-
-    def _proxy_config(self, proxy_url: str) -> dict[str, str | int]:
-        from urllib.parse import urlparse
-
-        parsed = urlparse(proxy_url)
-        if parsed.scheme not in {"http", "https", "socks5", "socks5h"} or not parsed.hostname or not parsed.port:
-            raise ValueError("PROXY_URL must include a supported scheme, hostname, and port")
-        proxy = {
-            "scheme": parsed.scheme,
-            "hostname": parsed.hostname,
-            "port": parsed.port,
-        }
-        if parsed.username:
-            proxy["username"] = parsed.username
-        if parsed.password:
-            proxy["password"] = parsed.password
-        return proxy
 
     def _get_button_bg_color(self) -> str | None:
         value = getenv("BUTTON_BG_COLOR", "green")
