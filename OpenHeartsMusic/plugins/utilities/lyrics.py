@@ -6,7 +6,7 @@ from urllib.parse import quote
 import aiohttp
 from hydrogram import filters, types
 
-from OpenHeartsMusic import app, config, db, logger, queue
+from OpenHeartsMusic import app, db, logger, queue
 
 
 _LYRIC_TASKS: dict[int, asyncio.Task] = {}
@@ -16,13 +16,12 @@ _LRC_LINE = re.compile(r"^\[(\d+):(\d{2}(?:\.\d{1,3})?)\](.*)$")
 async def get_synced_lyrics(artist: str, title: str) -> list[tuple[float, str]]:
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"}
-        async with aiohttp.ClientSession(headers=headers, trust_env=True) as session:
+        async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(
                 "https://lrclib.net/api/get",
                 params={"artist_name": artist, "track_name": title},
                 timeout=aiohttp.ClientTimeout(total=10),
                 headers=headers,
-                proxy=config.PROXY_URL,
             ) as response:
                 if response.status != 200:
                     return []
@@ -53,12 +52,11 @@ async def get_unsynced_lyrics(artist: str, title: str) -> list[str]:
 
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"}
-        async with aiohttp.ClientSession(headers=headers, trust_env=True) as session:
+        async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(
                 url,
                 timeout=aiohttp.ClientTimeout(total=10),
                 headers=headers,
-                proxy=config.PROXY_URL,
             ) as response:
                 if response.status != 200:
                     return []
