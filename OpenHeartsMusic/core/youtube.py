@@ -17,6 +17,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Optional, Union
 
+from OpenHeartsMusic import config, logger
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ROOT_COOKIE_FILE = PROJECT_ROOT.parent / "cookies.txt"
@@ -28,12 +29,18 @@ deno_path = os.path.expanduser("~\\.deno\\bin")
 if deno_path not in os.environ.get("PATH", "").split(os.pathsep):
     os.environ["PATH"] = os.environ.get("PATH", "") + os.pathsep + deno_path
 
+BROWSER_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+
 YTDLP_COMMON_OPTIONS = {
     "quiet": True,
     "no_warnings": True,
     "js_runtimes": {"deno": {}, "node": {}},
     "geo_bypass": True,
     "nocheckcertificate": True,
+    "proxy": config.PROXY_URL,
+    "http_headers": {
+        "User-Agent": BROWSER_USER_AGENT,
+    },
 }
 
 AUTOPLAY_SEARCH_KEYWORDS = (
@@ -54,7 +61,6 @@ AUTOPLAY_BLOCKED_TITLE_TERMS = (
 
 from hydrogram import enums, types
 from py_yt import Playlist, VideosSearch
-from OpenHeartsMusic import config, logger
 from OpenHeartsMusic.helpers import Track, utils
 
 
@@ -214,8 +220,9 @@ class YouTube:
 
         api_url = f"https://itunes.apple.com/lookup?id={match.group(1)}&entity=song"
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(api_url, timeout=aiohttp.ClientTimeout(total=15)) as response:
+            headers = {"User-Agent": BROWSER_USER_AGENT}
+            async with aiohttp.ClientSession(headers=headers, trust_env=True) as session:
+                async with session.get(api_url, timeout=aiohttp.ClientTimeout(total=15), proxy=config.PROXY_URL) as response:
                     if response.status != 200:
                         return []
                     payload = await response.json()
@@ -328,8 +335,8 @@ class YouTube:
             try:
                 path = str(cookies_dir / f"cookie{random.randint(10000, 99999)}.txt")
                 link = url.replace("me/", "me/raw/")
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(link) as resp:
+                async with aiohttp.ClientSession(headers={"User-Agent": BROWSER_USER_AGENT}, trust_env=True) as session:
+                    async with session.get(link, headers={"User-Agent": BROWSER_USER_AGENT}) as resp:
                         if resp.status != 200:
                             logger.error(f"❌ Cookie download failed: HTTP {resp.status} from {url}")
                             continue
@@ -417,7 +424,7 @@ class YouTube:
                 cookie_options = self._cookie_options()
                 attempts = [cookie_options]
                 if cookie_options:
-                    attempts.append({})
+                    attempts.append(cookie_options.copy())
 
                 def _extract(options):
                     ydl_opts = {
@@ -442,7 +449,7 @@ class YouTube:
                             and self._is_reload_error(error)
                         ):
                             logger.warning(
-                                "YouTube rejected the configured cookie; retrying URL search without cookies for %s",
+                                "YouTube rejected the configured cookie; retrying URL search with the same cookie file for %s",
                                 query,
                             )
                             continue
@@ -947,17 +954,8 @@ class YouTube:
                         except Exception:
                             pass
 
-            # A stale or VPS-specific cookie can make YouTube reject an otherwise
-            # valid request. Retry once without it before reporting a failure.
-            result = await asyncio.to_thread(_download, ydl_opts_cookie)
-            if result or not self.get_cookies():
-                return result
-
-            logger.warning(
-                "YouTube rejected the configured cookie; retrying without cookies for %s",
-                video_id,
-            )
-            return await asyncio.to_thread(_download, ydl_opts)
+            # Always keep the configured cookie file enabled for YouTube requests.
+            return await asyncio.to_thread(_download, ydl_opts_cookie)
 
     async def stream_url(self, video_id: str) -> Optional[str]:
         """Resolve a short-lived direct audio URL without downloading the track."""
@@ -965,7 +963,7 @@ class YouTube:
         cookie_options = self._cookie_options()
         attempts = [cookie_options]
         if cookie_options:
-            attempts.append({})
+            attempts.append(cookie_options.copy())
 
         def _extract_stream_url(options):
             ydl_opts = {
