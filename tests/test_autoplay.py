@@ -24,6 +24,13 @@ class DummyCache:
 
 
 class AutoplayTests(unittest.IsolatedAsyncioTestCase):
+    def test_get_cookies_uses_absolute_project_paths(self):
+        youtube = YouTube()
+        cookie = youtube.get_cookies()
+
+        if cookie:
+            self.assertTrue(Path(cookie).is_absolute())
+
     def test_autostream_alias_is_registered(self):
         repo_root = Path(__file__).resolve().parents[1]
         autoplay_py = (
@@ -112,11 +119,40 @@ class AutoplayTests(unittest.IsolatedAsyncioTestCase):
                 return {"url": "https://audio.example/song.m4a"}
 
         with patch("OpenHeartsMusic.core.youtube.yt_dlp.YoutubeDL", FakeYDL), patch(
-            "asyncio.to_thread", side_effect=lambda func, *args, **kwargs: func()
+            "asyncio.to_thread", side_effect=lambda func, *args, **kwargs: func(*args)
         ):
             stream_url = await YouTube().stream_url("song-id")
 
         self.assertEqual(stream_url, "https://audio.example/song.m4a")
+
+    async def test_stream_url_retries_after_youtube_reload_error(self):
+        attempts = []
+
+        class FakeYDL:
+            def __init__(self, options):
+                attempts.append(options)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def extract_info(self, url, download=False):
+                if len(attempts) == 1:
+                    raise RuntimeError("The page needs to be reloaded")
+                return {"url": "https://audio.example/recovered.m4a"}
+
+        with patch("OpenHeartsMusic.core.youtube.yt_dlp.YoutubeDL", FakeYDL), patch(
+            "OpenHeartsMusic.core.youtube.YouTube._cookie_options", return_value={"cookiefile": "stale.txt"}
+        ), patch(
+            "asyncio.to_thread", side_effect=lambda func, *args, **kwargs: func(*args)
+        ):
+            stream_url = await YouTube().stream_url("song-id")
+
+        self.assertEqual(stream_url, "https://audio.example/recovered.m4a")
+        self.assertEqual(len(attempts), 2)
+        self.assertNotIn("cookiefile", attempts[1])
 
     async def test_related_autoplay_skips_current_track(self):
         class FakeYDL:
