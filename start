@@ -1,3 +1,4 @@
 #!/usr/bin/env sh
 cd "$(dirname "$0")" || exit 1
+python3 -c 'import sys; raise SystemExit("Python 3.11 or newer is required; found " + sys.version.split()[0]) if sys.version_info < (3, 11) else None' || exit 1
 exec python3 -m OpenHeartsMusic
