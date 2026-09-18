@@ -294,8 +294,8 @@ Contributions are welcome. Bug fixes, documentation improvements, performance wo
 
 | Platform | Link |
 |----------|------|
-| 📢 Telegram Channel | [Shreyansh Music Support](https://t.me/ShreyanshMusicSupport) |
-| 💬 Telegram Support | [OpenHearts Support Chat](https://t.me/+jLpKEtUuhyNlODA1) |
+| 📢 Telegram Channel | [Shreyansh Music Support](https://t.me/Shreyansh_bot1) |
+| 💬 Telegram Support | [OpenHearts Support Chat](https://t.me/Shreyansh_bot2) |
 
 For bugs, include the relevant logs, configuration flags, and reproduction steps. Never share your `.env` file or session strings.
 
